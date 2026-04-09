@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dotts</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0a0a; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+.phone { width: 375px; min-height: 820px; background: #111; border-radius: 44px; border: 1px solid #2a2a2a; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+/* Status Bar */
+.status-bar { background: #0a0a0a; padding: 6px 0 0; }
+.status-inner { display: flex; justify-content: space-between; align-items: center; padding: 0 24px 6px; }
+.status-time { font-size: 12px; font-weight: 500; color: #fff; }
+.status-pill { width: 90px; height: 24px; background: #0a0a0a; border-radius: 0 0 14px 14px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+.status-icons { display: flex; gap: 4px; align-items: center; }
+/* Screens */
+.screen { display: none; flex-direction: column; flex: 1; overflow-y: auto; scrollbar-width: none; }
+.screen::-webkit-scrollbar { display: none; }
+.screen.active { display: flex; }
+/* Header */
+.header { padding: 14px 20px 0; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+.logo-wrap { display: flex; align-items: center; gap: 8px; }
+.logo-text { font-size: 26px; font-weight: 500; letter-spacing: -1px; color: #fff; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.icon-btn { width: 36px; height: 36px; border-radius: 50%; background: #1e1e1e; border: 0.5px solid #2e2e2e; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; }
+.notif-dot { width: 7px; height: 7px; background: #F5C542; border-radius: 50%; position: absolute; top: 5px; right: 5px; border: 1.5px solid #111; }
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: #F5C542; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #111; cursor: pointer; }
+/* Greeting */
+.greeting { padding: 16px 20px 0; }
+.greet-sub { font-size: 13px; color: #666; }
+.greet-name { font-size: 20px; font-weight: 500; color: #fff; margin-top: 2px; }
+/* Search */
+.search-bar { margin: 14px 20px 0; background: #1a1a1a; border: 0.5px solid #2e2e2e; border-radius: 14px; padding: 11px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: border-color 0.2s; }
+.search-bar:hover { border-color: #F5C542; }
+.search-bar span { font-size: 14px; color: #555; flex: 1; }
+.mic-btn { width: 30px; height: 30px; background: #F5C542; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+/* Urgent */
+.urgent { margin: 14px 20px 0; background: #1a1a1a; border: 0.5px solid #F5C542; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.2s; }
+.urgent:hover { background: #1f1f00; }
+.urg-icon { width: 32px; height: 32px; background: #F5C542; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.urg-t1 { font-size: 13px; font-weight: 500; color: #F5C542; }
+.urg-t2 { font-size: 11px; color: #888; margin-top: 1px; }
+/* Section */
+.section-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 10px; flex-shrink: 0; }
+.section-title { font-size: 15px; font-weight: 500; color: #fff; }
+.see-all { font-size: 13px; color: #F5C542; cursor: pointer; }
+/* Categories */
+.cats { display: flex; gap: 10px; padding: 0 20px; overflow-x: auto; scrollbar-width: none; flex-shrink: 0; }
+.cats::-webkit-scrollbar { display: none; }
+.cat { flex-shrink: 0; width: 68px; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.cat-icon { width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center; background: #1a1a1a; border: 0.5px solid #2e2e2e; transition: all 0.2s; }
+.cat-icon.on { background: #F5C542; border-color: #F5C542; }
+.cat-lbl { font-size: 11px; color: #555; text-align: center; transition: color 0.2s; }
+.cat-lbl.on { color: #F5C542; font-weight: 500; }
+/* Banner */
+.banner { margin: 16px 20px 0; background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 16px; padding: 16px; display: flex; justify-content: space-between; align-items: center; overflow: hidden; position: relative; flex-shrink: 0; }
+.banner-accent { position: absolute; right: -20px; top: -20px; width: 120px; height: 120px; border-radius: 50%; background: #F5C542; opacity: 0.06; }
+.banner-tag { font-size: 10px; color: #F5C542; background: rgba(245,197,66,0.15); padding: 3px 8px; border-radius: 20px; display: inline-block; margin-bottom: 6px; }
+.banner-title { font-size: 15px; font-weight: 500; color: #fff; line-height: 1.3; }
+.banner-sub { font-size: 11px; color: #666; margin-top: 4px; }
+.banner-btn { background: #F5C542; color: #111; font-size: 12px; font-weight: 600; padding: 9px 16px; border-radius: 20px; white-space: nowrap; cursor: pointer; flex-shrink: 0; border: none; transition: opacity 0.2s; }
+.banner-btn:hover { opacity: 0.85; }
+/* Providers */
+.providers { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+.pcard { background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.2s; }
+.pcard:hover:not(.disabled) { border-color: #F5C542; }
+.pcard.featured { border-color: #F5C542; }
+.pcard.disabled { opacity: 0.5; pointer-events: none; }
+.pavatar { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pname { font-size: 14px; font-weight: 500; color: #fff; }
+.prole { font-size: 12px; color: #666; margin-top: 1px; }
+.pmeta { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+.prating { display: flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 500; color: #F5C542; }
+.pdist { font-size: 11px; color: #555; }
+.badge-av { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; background: rgba(245,197,66,0.15); color: #F5C542; }
+.badge-bsy { font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; background: #222; color: #555; }
+.arrow-btn { width: 30px; height: 30px; background: #F5C542; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.arrow-btn-off { width: 30px; height: 30px; background: #222; border: 0.5px solid #2e2e2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+/* Bottom Nav */
+.bnav { border-top: 0.5px solid #1e1e1e; padding: 10px 20px 22px; display: flex; justify-content: space-around; align-items: center; background: #111; flex-shrink: 0; }
+.nitem { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; min-width: 48px; }
+.nlbl { font-size: 10px; color: #444; }
+.nlbl.on { color: #F5C542; }
+.ndot { width: 4px; height: 4px; border-radius: 50%; background: #F5C542; margin: -1px auto 0; }
+.fab { width: 52px; height: 52px; border-radius: 50%; background: #F5C542; display: flex; align-items: center; justify-content: center; margin-top: -20px; cursor: pointer; transition: opacity 0.2s; }
+.fab:hover { opacity: 0.85; }
+/* Back button */
+.back-btn { display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 14px 20px 0; color: #F5C542; font-size: 14px; flex-shrink: 0; }
+/* Tech Detail Screen */
+.tech-hero { margin: 16px 20px 0; background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 20px; padding: 20px; flex-shrink: 0; }
+.tech-avatar-lg { width: 64px; height: 64px; border-radius: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.tech-name-lg { font-size: 20px; font-weight: 500; color: #fff; }
+.tech-role-lg { font-size: 13px; color: #666; margin-top: 2px; }
+.stars-row { display: flex; gap: 3px; }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 16px; }
+.stat-box { background: #222; border-radius: 12px; padding: 10px; text-align: center; }
+.stat-val { font-size: 16px; font-weight: 600; color: #F5C542; }
+.stat-lbl { font-size: 10px; color: #666; margin-top: 2px; }
+.reviews-section { margin: 16px 20px 0; flex-shrink: 0; }
+.review-card { background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 14px; padding: 12px; margin-bottom: 10px; }
+.review-name { font-size: 13px; font-weight: 500; color: #fff; }
+.review-date { font-size: 11px; color: #555; margin-left: 6px; }
+.review-text { font-size: 12px; color: #888; margin-top: 6px; line-height: 1.5; }
+.book-bar { margin: 16px 20px 16px; flex-shrink: 0; }
+.book-btn { width: 100%; background: #F5C542; color: #111; font-size: 15px; font-weight: 600; padding: 16px; border-radius: 16px; border: none; cursor: pointer; transition: opacity 0.2s; }
+.book-btn:hover { opacity: 0.85; }
+/* Booking Modal */
+.modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: flex-end; z-index: 100; }
+.modal-sheet { background: #1a1a1a; border-radius: 24px 24px 0 0; padding: 20px 20px 32px; width: 100%; border-top: 0.5px solid #2e2e2e; }
+.modal-handle { width: 36px; height: 4px; background: #333; border-radius: 2px; margin: 0 auto 20px; }
+.modal-title { font-size: 18px; font-weight: 500; color: #fff; margin-bottom: 16px; }
+.modal-input { width: 100%; background: #222; border: 0.5px solid #2e2e2e; border-radius: 12px; padding: 12px 14px; color: #fff; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; }
+.modal-input:focus { border-color: #F5C542; }
+.modal-input::placeholder { color: #444; }
+.modal-select { width: 100%; background: #222; border: 0.5px solid #2e2e2e; border-radius: 12px; padding: 12px 14px; color: #fff; font-size: 14px; margin-bottom: 12px; outline: none; font-family: inherit; appearance: none; cursor: pointer; }
+.modal-label { font-size: 12px; color: #666; margin-bottom: 6px; display: block; }
+.confirm-btn { width: 100%; background: #F5C542; color: #111; font-size: 15px; font-weight: 600; padding: 14px; border-radius: 14px; border: none; cursor: pointer; margin-top: 4px; }
+.cancel-btn { width: 100%; background: transparent; color: #666; font-size: 14px; padding: 12px; border-radius: 14px; border: 0.5px solid #2e2e2e; cursor: pointer; margin-top: 8px; }
+/* Orders Screen */
+.order-card { background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 14px; padding: 14px; margin: 0 20px 10px; flex-shrink: 0; }
+.order-card.active-order { border-color: #F5C542; }
+.order-status { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 20px; display: inline-block; }
+.status-pending { background: rgba(245,197,66,0.15); color: #F5C542; }
+.status-done { background: rgba(60,180,60,0.15); color: #5EBB5E; }
+.status-cancelled { background: rgba(180,60,60,0.15); color: #BB5E5E; }
+.order-tech { font-size: 14px; font-weight: 500; color: #fff; margin-top: 8px; }
+.order-detail { font-size: 12px; color: #666; margin-top: 3px; }
+.order-price { font-size: 15px; font-weight: 600; color: #F5C542; margin-top: 8px; }
+.cancel-order-btn { background: transparent; border: 0.5px solid #333; border-radius: 8px; color: #888; font-size: 12px; padding: 6px 12px; cursor: pointer; margin-top: 8px; }
+/* Profile Screen */
+.profile-hero { margin: 16px 20px 0; flex-shrink: 0; }
+.profile-avatar-lg { width: 80px; height: 80px; border-radius: 50%; background: #F5C542; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 600; color: #111; margin: 0 auto 12px; }
+.profile-name { font-size: 20px; font-weight: 500; color: #fff; text-align: center; }
+.profile-email { font-size: 13px; color: #666; text-align: center; margin-top: 4px; }
+.profile-section { margin: 20px 20px 0; flex-shrink: 0; }
+.profile-item { background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; cursor: pointer; transition: border-color 0.2s; }
+.profile-item:hover { border-color: #2e2e2e; }
+.profile-item-icon { width: 38px; height: 38px; background: #222; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.profile-item-text { flex: 1; }
+.profile-item-title { font-size: 14px; font-weight: 500; color: #fff; }
+.profile-item-sub { font-size: 12px; color: #666; margin-top: 2px; }
+.edit-profile-modal .modal-sheet { max-height: 80vh; overflow-y: auto; }
+/* Explore Screen */
+.explore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 20px; }
+.explore-card { background: #1a1a1a; border: 0.5px solid #2a2a2a; border-radius: 16px; padding: 16px; cursor: pointer; transition: border-color 0.2s; }
+.explore-card:hover { border-color: #F5C542; }
+.explore-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+.explore-cat-name { font-size: 14px; font-weight: 500; color: #fff; }
+.explore-cat-count { font-size: 12px; color: #666; margin-top: 3px; }
+/* Toast */
+.toast { position: absolute; bottom: 100px; left: 20px; right: 20px; background: #2a2a2a; border: 0.5px solid #3a3a3a; border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; z-index: 200; transform: translateY(20px); opacity: 0; transition: all 0.3s; pointer-events: none; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast-icon { width: 32px; height: 32px; background: #F5C542; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.toast-text { font-size: 13px; color: #fff; line-height: 1.4; }
+/* Empty state */
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 12px; }
+.empty-icon { width: 60px; height: 60px; background: #1a1a1a; border-radius: 18px; display: flex; align-items: center; justify-content: center; }
+.empty-title { font-size: 16px; font-weight: 500; color: #fff; text-align: center; }
+.empty-sub { font-size: 13px; color: #555; text-align: center; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="app">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <div class="status-inner">
+      <span class="status-time" id="clock">9:41</span>
+      <div class="status-pill">
+        <div style="width:8px;height:8px;border-radius:50%;background:#222;"></div>
+        <div style="width:32px;height:4px;border-radius:2px;background:#222;"></div>
+      </div>
+      <div class="status-icons">
+        <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><rect x="0" y="4" width="3" height="7" rx="1" fill="#fff" opacity=".4"/><rect x="4.5" y="2.5" width="3" height="8.5" rx="1" fill="#fff" opacity=".6"/><rect x="9" y="0" width="3" height="11" rx="1" fill="#fff"/></svg>
+        <svg width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M7 2.5C9 2.5 10.8 3.3 12.1 4.6L13.5 3.2C11.8 1.5 9.5 0.5 7 0.5C4.5 0.5 2.2 1.5 0.5 3.2L1.9 4.6C3.2 3.3 5 2.5 7 2.5Z" fill="#fff" opacity=".4"/><path d="M7 5.5C8.2 5.5 9.3 6 10.1 6.8L11.5 5.4C10.3 4.2 8.7 3.5 7 3.5C5.3 3.5 3.7 4.2 2.5 5.4L3.9 6.8C4.7 6 5.8 5.5 7 5.5Z" fill="#fff" opacity=".7"/><circle cx="7" cy="9.5" r="1.5" fill="#fff"/></svg>
+        <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x=".5" y=".5" width="20" height="11" rx="3.5" stroke="#fff" stroke-opacity=".35"/><rect x="2" y="2" width="16" height="8" rx="2" fill="#fff"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div class="screen active" id="screen-home">
+    <div class="header">
+      <div class="logo-wrap">
+        <svg width="28" height="28" viewBox="0 0 40 40"><polygon points="20,2 36,11 36,29 20,38 4,29 4,11" fill="#F5C542"/><circle cx="20" cy="20" r="9" fill="#111"/><circle cx="20" cy="20" r="5.5" fill="#D4A017"/></svg>
+        <span class="logo-text">Dotts</span>
+      </div>
+      <div class="header-right">
+        <div class="icon-btn" onclick="goTo('screen-pedidos')">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notif-dot" id="notif-dot" style="display:none;"></div>
+        </div>
+        <div class="avatar" id="home-avatar" onclick="goTo('screen-perfil')">JD</div>
+      </div>
+    </div>
+    <div class="greeting">
+      <div class="greet-sub">Buen día, bienvenido</div>
+      <div class="greet-name" id="home-greeting">¿Qué necesitas hoy?</div>
+    </div>
+    <div class="search-bar" onclick="goTo('screen-explorar')">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#555" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span>Buscar servicio o profesional...</span>
+      <div class="mic-btn"><svg width="12" height="14" fill="none" viewBox="0 0 24 24" stroke="#111" stroke-width="2.5"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg></div>
+    </div>
+    <div class="urgent" onclick="bookTech('emergencia')">
+      <div class="urg-icon"><svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#111" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <div><div class="urg-t1">¿Emergencia? Servicio inmediato</div><div class="urg-t2">Técnicos disponibles ahora cerca de ti</div></div>
+      <div style="margin-left:auto;"><svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#F5C542" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg></div>
+    </div>
+    <div class="section-header"><span class="section-title">Categorías</span><span class="see-all" onclick="goTo('screen-explorar')">Ver todas</span></div>
+    <div class="cats" id="home-cats"></div>
+    <div class="banner">
+      <div class="banner-accent"></div>
+      <div>
+        <div class="banner-tag">Oferta especial</div>
+        <div class="banner-title">Primera revisión<br>de A/C gratis</div>
+        <div class="banner-sub">Solo hoy · Hasta las 3pm</div>
+      </div>
+      <button class="banner-btn" onclick="bookTech('carlos')">Solicitar</button>
+    </div>
+    <div class="section-header"><span class="section-title">Técnicos cerca de ti</span><span class="see-all" onclick="goTo('screen-explorar')">Ver mapa</span></div>
+    <div class="providers" id="home-providers"></div>
+    <div style="height:20px;"></div>
+  </div>
+
+  <!-- TECH DETAIL SCREEN -->
+  <div class="screen" id="screen-detail">
+    <div class="back-btn" onclick="goBack()">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#F5C542" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+      Volver
+    </div>
+    <div id="detail-content"></div>
+  </div>
+
+  <!-- EXPLORE SCREEN -->
+  <div class="screen" id="screen-explorar">
+    <div class="header">
+      <span class="logo-text" style="font-size:20px;">Explorar</span>
+    </div>
+    <div style="padding:14px 20px 0;">
+      <div class="search-bar" style="margin:0;">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#555" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <span>Buscar servicio o profesional...</span>
+      </div>
+    </div>
+    <div class="section-header"><span class="section-title">Todas las categorías</span></div>
+    <div class="explore-grid" id="explore-grid"></div>
+    <div class="section-header" style="margin-top:8px;"><span class="section-title">Todos los técnicos</span></div>
+    <div class="providers" id="explore-providers" style="padding-bottom:20px;"></div>
+  </div>
+
+  <!-- ORDERS SCREEN -->
+  <div class="screen" id="screen-pedidos">
+    <div class="header">
+      <span class="logo-text" style="font-size:20px;">Mis Pedidos</span>
+    </div>
+    <div style="height:16px;"></div>
+    <div id="orders-list"></div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div class="screen" id="screen-perfil">
+    <div class="header">
+      <span class="logo-text" style="font-size:20px;">Perfil</span>
+      <button onclick="openEditProfile()" style="background:transparent;border:0.5px solid #2e2e2e;color:#F5C542;font-size:13px;padding:6px 14px;border-radius:20px;cursor:pointer;">Editar</button>
+    </div>
+    <div class="profile-hero">
+      <div class="profile-avatar-lg" id="profile-avatar-lg">JD</div>
+      <div class="profile-name" id="profile-name-display">Juan Díaz</div>
+      <div class="profile-email" id="profile-email-display">juan@email.com</div>
+    </div>
+    <div class="profile-section">
+      <div class="section-title" style="margin-bottom:12px;">Mi cuenta</div>
+      <div class="profile-item" onclick="goTo('screen-pedidos')">
+        <div class="profile-item-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#F5C542" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
+        <div class="profile-item-text"><div class="profile-item-title">Mis pedidos</div><div class="profile-item-sub" id="orders-count-profile">0 pedidos realizados</div></div>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#444" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div class="profile-item">
+        <div class="profile-item-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#F5C542" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <div class="profile-item-text"><div class="profile-item-title">Mi dirección</div><div class="profile-item-sub" id="profile-address-display">Santo Domingo, RD</div></div>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#444" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+      <div class="profile-item">
+        <div class="profile-item-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#F5C542" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
+        <div class="profile-item-text"><div class="profile-item-title">Método de pago</div><div class="profile-item-sub">•••• 4242</div></div>
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#444" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    </div>
+    <div class="profile-section" style="margin-top:16px;">
+      <div class="section-title" style="margin-bottom:12px;">Configuración</div>
+      <div class="profile-item" onclick="clearAllData()">
+        <div class="profile-item-icon"><svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#BB5E5E" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="m19 6-.867 12.142A2 2 0 0 1 16.138 20H7.862a2 2 0 0 1-1.995-1.858L5 6m5 0V4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/></svg></div>
+        <div class="profile-item-text"><div class="profile-item-title" style="color:#BB5E5E;">Borrar datos locales</div><div class="profile-item-sub">Restablece pedidos y configuración</div></div>
+      </div>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bnav" id="main-bnav">
+    <div class="nitem" onclick="goTo('screen-home')">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#F5C542" stroke-width="2" id="nav-home-icon"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span class="nlbl on" id="nav-home-lbl">Inicio</span>
+      <div class="ndot" id="nav-home-dot"></div>
+    </div>
+    <div class="nitem" onclick="goTo('screen-explorar')">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#444" stroke-width="2" id="nav-explore-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span class="nlbl" id="nav-explore-lbl">Explorar</span>
+    </div>
+    <div class="nitem" style="margin-top:-16px;">
+      <div class="fab" onclick="openNewBooking()">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#111" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+    </div>
+    <div class="nitem" onclick="goTo('screen-pedidos')">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#444" stroke-width="2" id="nav-orders-icon"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+      <span class="nlbl" id="nav-orders-lbl">Pedidos</span>
+    </div>
+    <div class="nitem" onclick="goTo('screen-perfil')">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#444" stroke-width="2" id="nav-profile-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span class="nlbl" id="nav-profile-lbl">Perfil</span>
+    </div>
+  </div>
+
+  <!-- Booking Modal -->
+  <div class="modal-overlay" id="booking-modal" style="display:none;" onclick="closeModalOnOverlay(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title" id="modal-title">Solicitar servicio</div>
+      <label class="modal-label">Técnico</label>
+      <select class="modal-select" id="modal-tech">
+        <option value="carlos">Carlos Méndez — A/C · $800/hr</option>
+        <option value="ana">Ana Torres — A/C · $750/hr</option>
+      </select>
+      <label class="modal-label">Descripción del problema</label>
+      <textarea class="modal-input" id="modal-desc" rows="3" placeholder="Ej: El equipo no enfría bien..."></textarea>
+      <label class="modal-label">Dirección</label>
+      <input class="modal-input" type="text" id="modal-address" placeholder="Tu dirección...">
+      <label class="modal-label">Fecha y hora preferida</label>
+      <input class="modal-input" type="datetime-local" id="modal-datetime">
+      <button class="confirm-btn" onclick="confirmBooking()">Confirmar reserva</button>
+      <button class="cancel-btn" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="edit-profile-modal" style="display:none;" onclick="closeEditProfileOnOverlay(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-title">Editar perfil</div>
+      <label class="modal-label">Nombre completo</label>
+      <input class="modal-input" type="text" id="edit-name" placeholder="Tu nombre">
+      <label class="modal-label">Correo electrónico</label>
+      <input class="modal-input" type="email" id="edit-email" placeholder="tu@email.com">
+      <label class="modal-label">Dirección</label>
+      <input class="modal-input" type="text" id="edit-address" placeholder="Tu dirección">
+      <button class="confirm-btn" onclick="saveProfile()">Guardar cambios</button>
+      <button class="cancel-btn" onclick="closeEditProfile()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-icon">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="#111" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+    </div>
+    <div class="toast-text" id="toast-text">¡Reserva confirmada!</div>
+  </div>
+
+</div>
+
+<script>
+const CATS = [
+  { id:'clima', label:'Clima', color:'#2a2200', stroke:'#F5C542', svg:'<path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/>'},
+  { id:'electrico', label:'Eléctrico', color:'#1a1a2e', stroke:'#7B7BF5', svg:'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'},
+  { id:'plomeria', label:'Plomería', color:'#0d1f2d', stroke:'#5BB8F5', svg:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
+  { id:'tecno', label:'Tecno', color:'#1a1a1a', stroke:'#888', svg:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>'},
+  { id:'hogar', label:'Hogar', color:'#1a1a1a', stroke:'#888', svg:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/>'},
+  { id:'internet', label:'Internet', color:'#1a1a1a', stroke:'#888', svg:'<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>'}
+];
+
+const TECHS = [
+  { id:'carlos', name:'Carlos Méndez', role:'Técnico A/C · 8 años exp.', rating:4.9, dist:'0.8 km · ~12 min', price:'$800/hr', available:true, featured:true, cat:'clima', reviews:[{user:'María G.',date:'Hace 2 días',text:'Excelente servicio, llegó puntual y resolvió el problema rápido.'},{user:'Pedro R.',date:'Hace 1 semana',text:'Muy profesional. Revisó todo el sistema y dejó todo funcionando perfecto.'}], jobs:124 },
+  { id:'ana', name:'Ana Torres', role:'Técnica A/C · Certificada', rating:4.8, dist:'1.4 km · ~18 min', price:'$750/hr', available:true, featured:false, cat:'clima', reviews:[{user:'Laura M.',date:'Hace 3 días',text:'Increíble técnica, muy detallista y explica todo con paciencia.'},{user:'Carlos S.',date:'Hace 2 semanas',text:'La recomiendo totalmente, muy profesional.'}], jobs:89 },
+  { id:'rfernandez', name:'R. Fernández', role:'Técnico A/C · 5 años exp.', rating:4.6, dist:'2.1 km · libre ~40 min', price:'$700/hr', available:false, featured:false, cat:'clima', reviews:[{user:'Ana P.',date:'Hace 1 semana',text:'Buen trabajo aunque llegó un poco tarde.'}], jobs:67 },
+  { id:'jose', name:'José Ramírez', role:'Electricista · 10 años exp.', rating:4.7, dist:'1.2 km · ~15 min', price:'$900/hr', available:true, featured:false, cat:'electrico', reviews:[{user:'Mario L.',date:'Hace 4 días',text:'Excelente trabajo eléctrico. Muy ordenado y responsable.'}], jobs:203 },
+  { id:'lucia', name:'Lucía Peña', role:'Plomera · Certificada', rating:4.9, dist:'0.9 km · ~10 min', price:'$850/hr', available:true, featured:false, cat:'plomeria', reviews:[{user:'Sara M.',date:'Hace 1 semana',text:'Llegó rápido y solucionó la fuga en minutos. Muy profesional.'}], jobs:156 }
+];
+
+let state = {
+  currentScreen: 'screen-home',
+  prevScreen: null,
+  selectedCat: 'clima',
+  selectedTech: null,
+  bookingTechId: null
+};
+
+function loadData() {
+  try {
+    const saved = localStorage.getItem('dotts_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.selectedCat) state.selectedCat = parsed.selectedCat;
+    }
+  } catch(e) {}
+}
+
+function getOrders() {
+  try { return JSON.parse(localStorage.getItem('dotts_orders') || '[]'); } catch(e) { return []; }
+}
+
+function saveOrders(orders) {
+  localStorage.setItem('dotts_orders', JSON.stringify(orders));
+}
+
+function getProfile() {
+  try {
+    const saved = localStorage.getItem('dotts_profile');
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return { name: 'Juan Díaz', email: 'juan@email.com', initials: 'JD', address: 'Santo Domingo, RD' };
+}
+
+function saveProfile() {
+  const name = document.getElementById('edit-name').value.trim() || 'Usuario';
+  const email = document.getElementById('edit-email').value.trim() || '';
+  const address = document.getElementById('edit-address').value.trim() || 'Santo Domingo, RD';
+  const parts = name.split(' ');
+  const initials = parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.substring(0,2).toUpperCase();
+  const profile = { name, email, initials, address };
+  localStorage.setItem('dotts_profile', JSON.stringify(profile));
+  updateProfileUI();
+  closeEditProfile();
+  showToast('Perfil actualizado correctamente');
+}
+
+function updateProfileUI() {
+  const p = getProfile();
+  document.getElementById('profile-avatar-lg').textContent = p.initials;
+  document.getElementById('profile-name-display').textContent = p.name;
+  document.getElementById('profile-email-display').textContent = p.email;
+  document.getElementById('profile-address-display').textContent = p.address;
+  document.getElementById('home-avatar').textContent = p.initials;
+  const orders = getOrders();
+  document.getElementById('orders-count-profile').textContent = orders.length + ' pedido' + (orders.length !== 1 ? 's' : '') + ' realizado' + (orders.length !== 1 ? 's' : '');
+  const pendingOrders = orders.filter(o => o.status === 'pending');
+  document.getElementById('notif-dot').style.display = pendingOrders.length > 0 ? 'block' : 'none';
+}
+
+function goTo(screenId) {
+  state.prevScreen = state.currentScreen;
+  state.currentScreen = screenId;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  updateNav(screenId);
+  if (screenId === 'screen-home') renderHome();
+  if (screenId === 'screen-pedidos') renderOrders();
+  if (screenId === 'screen-explorar') renderExplore();
+  if (screenId === 'screen-perfil') { updateProfileUI(); }
+}
+
+function goBack() {
+  goTo(state.prevScreen || 'screen-home');
+}
+
+function updateNav(screenId) {
+  const navMap = {
+    'screen-home': 'home',
+    'screen-explorar': 'explore',
+    'screen-pedidos': 'orders',
+    'screen-perfil': 'profile'
+  };
+  ['home','explore','orders','profile'].forEach(n => {
+    document.getElementById('nav-'+n+'-lbl').className = 'nlbl';
+    document.getElementById('nav-'+n+'-icon').setAttribute('stroke','#444');
+    const dot = document.getElementById('nav-'+n+'-dot');
+    if (dot) dot.style.display = 'none';
+  });
+  const active = navMap[screenId];
+  if (active) {
+    document.getElementById('nav-'+active+'-lbl').className = 'nlbl on';
+    document.getElementById('nav-'+active+'-icon').setAttribute('stroke','#F5C542');
+    const dot = document.getElementById('nav-'+active+'-dot');
+    if (dot) dot.style.display = 'block';
+  }
+}
+
+function catSVG(cat, size=22, strokeColor) {
+  const c = CATS.find(x => x.id === cat);
+  if (!c) return '';
+  const color = strokeColor || c.stroke;
+  return `<svg width="${size}" height="${size}" fill="none" viewBox="0 0 24 24" stroke="${color}" stroke-width="1.8">${c.svg}</svg>`;
+}
+
+function starSVG(fill='#F5C542') {
+  return `<svg width="11" height="11" viewBox="0 0 24 24" fill="${fill}" stroke="none"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>`;
+}
+
+function renderCats(containerId, selectedCat) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = CATS.map(c => {
+    const on = c.id === selectedCat;
+    return `<div class="cat" onclick="selectCat('${c.id}','${containerId}')">
+      <div class="cat-icon ${on?'on':''}" id="caticon-${containerId}-${c.id}">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="${on?'#111':c.stroke}" stroke-width="1.8">${c.svg}</svg>
+      </div>
+      <span class="cat-lbl ${on?'on':''}" id="catlbl-${containerId}-${c.id}">${c.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectCat(catId, containerId) {
+  state.selectedCat = catId;
+  localStorage.setItem('dotts_state', JSON.stringify({ selectedCat: catId }));
+  renderCats(containerId, catId);
+  if (containerId === 'home-cats') renderHomeProviders();
+}
+
+function renderHomeProviders() {
+  const container = document.getElementById('home-providers');
+  const filtered = TECHS.filter(t => t.cat === state.selectedCat);
+  container.innerHTML = filtered.length ? filtered.map(t => techCardHTML(t)).join('') : '<div style="padding:20px;color:#555;font-size:14px;text-align:center;">No hay técnicos en esta categoría por ahora.</div>';
+}
+
+function techCardHTML(t) {
+  const avatarBg = t.available ? '#2a2200' : '#1a1a1a';
+  const avatarStroke = t.available ? '#F5C542' : '#444';
+  return `<div class="pcard ${t.featured?'featured':''} ${!t.available?'disabled':''}" onclick="openTechDetail('${t.id}')">
+    <div class="pavatar" style="background:${avatarBg};">
+      ${catSVG(t.cat, 22, avatarStroke)}
+    </div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="pname">${t.name}</span>
+        <span class="${t.available?'badge-av':'badge-bsy'}">${t.available?'Disponible':'Ocupado'}</span>
+      </div>
+      <div class="prole">${t.role}</div>
+      <div class="pmeta">
+        <span class="prating" style="${!t.available?'color:#555':''}">
+          ${starSVG(t.available?'#F5C542':'#555')}
+          ${t.rating}
+        </span>
+        <span style="font-size:11px;color:#333;">·</span>
+        <span class="pdist">${t.dist}</span>
+      </div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;">
+      <div style="font-size:13px;font-weight:500;color:${t.available?'#F5C542':'#555'}">${t.price}</div>
+      <div class="${t.available?'arrow-btn':'arrow-btn-off'}" style="margin-top:6px;margin-left:auto;">
+        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="${t.available?'#111':'#444'}" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderHome() {
+  renderCats('home-cats', state.selectedCat);
+  renderHomeProviders();
+}
+
+function renderExplore() {
+  const grid = document.getElementById('explore-grid');
+  grid.innerHTML = CATS.map(c => {
+    const count = TECHS.filter(t => t.cat === c.id && t.available).length;
+    return `<div class="explore-card" onclick="selectCatAndGoHome('${c.id}')">
+      <div class="explore-icon" style="background:${c.color || '#1e1e1e'};">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="${c.stroke}" stroke-width="1.8">${c.svg}</svg>
+      </div>
+      <div class="explore-cat-name">${c.label}</div>
+      <div class="explore-cat-count">${count} disponible${count !== 1 ? 's' : ''}</div>
+    </div>`;
+  }).join('');
+  const prov = document.getElementById('explore-providers');
+  prov.innerHTML = TECHS.map(t => techCardHTML(t)).join('');
+}
+
+function selectCatAndGoHome(catId) {
+  state.selectedCat = catId;
+  goTo('screen-home');
+}
+
+function openTechDetail(techId) {
+  const t = TECHS.find(x => x.id === techId);
+  if (!t) return;
+  state.selectedTech = techId;
+  state.prevScreen = state.currentScreen;
+  const starsHTML = Array.from({length:5}, (_,i) => starSVG(i < Math.floor(t.rating) ? '#F5C542' : '#333')).join('');
+  const reviewsHTML = t.reviews.map(r => `
+    <div class="review-card">
+      <div style="display:flex;align-items:center;">
+        <span class="review-name">${r.user}</span>
+        <span class="review-date">${r.date}</span>
+      </div>
+      <div class="review-text">${r.text}</div>
+    </div>`).join('');
+  document.getElementById('detail-content').innerHTML = `
+    <div class="tech-hero">
+      <div style="display:flex;gap:14px;align-items:center;">
+        <div class="tech-avatar-lg" style="background:${t.available?'#2a2200':'#1a1a1a'};">
+          ${catSVG(t.cat, 28, t.available?'#F5C542':'#555')}
+        </div>
+        <div>
+          <div class="tech-name-lg">${t.name}</div>
+          <div class="tech-role-lg">${t.role}</div>
+          <div class="stars-row" style="margin-top:6px;">${starsHTML} <span style="font-size:13px;color:#F5C542;margin-left:4px;">${t.rating}</span></div>
+        </div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-val">${t.jobs}</div><div class="stat-lbl">Trabajos</div></div>
+        <div class="stat-box"><div class="stat-val">${t.rating}</div><div class="stat-lbl">Calificación</div></div>
+        <div class="stat-box"><div class="stat-val">${t.price}</div><div class="stat-lbl">Tarifa</div></div>
+      </div>
+    </div>
+    <div class="reviews-section">
+      <div class="section-header" style="padding:18px 0 10px;"><span class="section-title">Reseñas</span></div>
+      ${reviewsHTML}
+    </div>
+    <div class="book-bar">
+      <button class="book-btn" ${!t.available?'disabled style="opacity:0.4;cursor:not-allowed;"':''} onclick="bookTech('${t.id}')">
+        ${t.available ? 'Reservar ahora' : 'Técnico no disponible'}
+      </button>
+    </div>`;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-detail').classList.add('active');
+  state.currentScreen = 'screen-detail';
+}
+
+function bookTech(techId) {
+  state.bookingTechId = techId;
+  const modal = document.getElementById('booking-modal');
+  const select = document.getElementById('modal-tech');
+  if (techId === 'emergencia') {
+    document.getElementById('modal-title').textContent = '🚨 Servicio de emergencia';
+    select.value = 'carlos';
+  } else if (techId) {
+    document.getElementById('modal-title').textContent = 'Solicitar servicio';
+    select.value = techId === 'rfernandez' ? 'carlos' : techId;
+  }
+  const profile = getProfile();
+  document.getElementById('modal-address').value = profile.address || '';
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('modal-datetime').value = now.toISOString().slice(0,16);
+  modal.style.display = 'flex';
+}
+
+function openNewBooking() {
+  bookTech(null);
+}
+
+function closeModal() {
+  document.getElementById('booking-modal').style.display = 'none';
+}
+
+function closeModalOnOverlay(e) {
+  if (e.target === document.getElementById('booking-modal')) closeModal();
+}
+
+function confirmBooking() {
+  const techId = document.getElementById('modal-tech').value;
+  const tech = TECHS.find(t => t.id === techId);
+  const desc = document.getElementById('modal-desc').value.trim() || 'Sin descripción';
+  const address = document.getElementById('modal-address').value.trim() || 'Sin dirección';
+  const datetime = document.getElementById('modal-datetime').value;
+  if (!tech) return;
+  const orders = getOrders();
+  const order = {
+    id: Date.now().toString(),
+    techId,
+    techName: tech.name,
+    techRole: tech.role,
+    techPrice: tech.price,
+    desc,
+    address,
+    datetime,
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  };
+  orders.unshift(order);
+  saveOrders(orders);
+  closeModal();
+  document.getElementById('modal-desc').value = '';
+  updateProfileUI();
+  showToast(`Reserva con ${tech.name} confirmada`);
+  setTimeout(() => goTo('screen-pedidos'), 1200);
+}
+
+function renderOrders() {
+  const orders = getOrders();
+  const container = document.getElementById('orders-list');
+  if (orders.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#444" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
+      <div class="empty-title">No tienes pedidos aún</div>
+      <div class="empty-sub">Reserva un técnico desde la pantalla principal o explora los disponibles.</div>
+    </div>`;
+    return;
+  }
+  const statusLabel = { pending: 'En curso', done: 'Completado', cancelled: 'Cancelado' };
+  const statusClass = { pending: 'status-pending', done: 'status-done', cancelled: 'status-cancelled' };
+  container.innerHTML = orders.map(o => {
+    const date = o.datetime ? new Date(o.datetime).toLocaleString('es-DO', { dateStyle:'medium', timeStyle:'short' }) : '';
+    return `<div class="order-card ${o.status==='pending'?'active-order':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <span class="order-status ${statusClass[o.status]}">${statusLabel[o.status]}</span>
+        ${o.status==='pending'?`<button class="cancel-order-btn" onclick="cancelOrder('${o.id}')">Cancelar</button>`:''}
+      </div>
+      <div class="order-tech">${o.techName}</div>
+      <div class="order-detail">${o.techRole}</div>
+      <div class="order-detail" style="margin-top:4px;">📍 ${o.address}</div>
+      ${date ? `<div class="order-detail">🕐 ${date}</div>` : ''}
+      <div class="order-detail" style="margin-top:4px;font-style:italic;">${o.desc}</div>
+      <div class="order-price">${o.techPrice}</div>
+      ${o.status==='pending'?`<button style="background:#F5C542;border:none;border-radius:8px;color:#111;font-size:12px;font-weight:600;padding:6px 14px;cursor:pointer;margin-top:8px;" onclick="completeOrder('${o.id}')">Marcar completado</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function cancelOrder(orderId) {
+  const orders = getOrders();
+  const idx = orders.findIndex(o => o.id === orderId);
+  if (idx >= 0) { orders[idx].status = 'cancelled'; saveOrders(orders); }
+  renderOrders();
+  updateProfileUI();
+  showToast('Pedido cancelado');
+}
+
+function completeOrder(orderId) {
+  const orders = getOrders();
+  const idx = orders.findIndex(o => o.id === orderId);
+  if (idx >= 0) { orders[idx].status = 'done'; saveOrders(orders); }
+  renderOrders();
+  updateProfileUI();
+  showToast('¡Servicio marcado como completado!');
+}
+
+function openEditProfile() {
+  const p = getProfile();
+  document.getElementById('edit-name').value = p.name;
+  document.getElementById('edit-email').value = p.email;
+  document.getElementById('edit-address').value = p.address;
+  document.getElementById('edit-profile-modal').style.display = 'flex';
+}
+
+function closeEditProfile() {
+  document.getElementById('edit-profile-modal').style.display = 'none';
+}
+
+function closeEditProfileOnOverlay(e) {
+  if (e.target === document.getElementById('edit-profile-modal')) closeEditProfile();
+}
+
+function clearAllData() {
+  if (confirm('¿Estás seguro? Se borrarán todos tus pedidos y datos del perfil.')) {
+    localStorage.removeItem('dotts_orders');
+    localStorage.removeItem('dotts_profile');
+    localStorage.removeItem('dotts_state');
+    state.selectedCat = 'clima';
+    updateProfileUI();
+    showToast('Datos borrados correctamente');
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-text').textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+}
+
+loadData();
+renderHome();
+updateProfileUI();
+updateClock();
+setInterval(updateClock, 30000);
+</script>
+</body>
+</html>
